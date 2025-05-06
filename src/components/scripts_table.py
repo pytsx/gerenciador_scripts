@@ -33,13 +33,13 @@ def scripts_table(props: RouteProps):
               content=ft.Row(
                   
                   controls=[
-                    ft.IconButton(ft.icons.ARROW_OUTWARD_SHARP, tooltip="ir para", on_click=lambda e, m=module, p=props: p.router.navigate("/" + m, p.ctx)),
+                    ft.IconButton(ft.icons.ARROW_OUTWARD_SHARP, tooltip="ir para", on_click=lambda e, m=module, p=props: p.router.navigate(p.ctx, "/" + m)),
                     ft.PopupMenuButton(
                       icon=ft.icons.MORE_VERT,
                       tooltip="Ações rápidas",
                       items=[
                         ft.PopupMenuItem(text="Executar", on_click=lambda e, m=module: executar_modulo(m)),
-                        ft.PopupMenuItem(text="ir para", on_click=lambda e, m=module, p=props: p.router.navigate("/" + m, p.ctx)),
+                        ft.PopupMenuItem(text="ir para", on_click=lambda e, m=module, p=props: p.router.navigate(p.ctx, "/" + m)),
                       ]
                     )
                   ],

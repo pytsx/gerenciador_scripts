@@ -6,7 +6,6 @@ class RouteProps:
   """
   Class to hold route properties for a given route.
   """
-
   def __init__(
     self, 
     ctx: ft.Page,

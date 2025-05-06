@@ -7,7 +7,9 @@ Também disponibiliza funções default de layout e page.
 """
 import flet as ft
 from engine.router import Router
+from engine.route_props import RouteProps
 from engine.router_searchbar import RouterSearchbar
+from engine.route_builder import RouteBuilder
 
 class Renderer: 
     def __init__(self, router: Router) -> None:
@@ -15,8 +17,8 @@ class Renderer:
     
     def _render(self, ctx: ft.Page) -> ft.Page:
         route = self.router.get_route(self.router.url)
-        ctx.add(RouterSearchbar(page=ctx, router=self.router, bar_hint_text=self.router.url))
-        ctx.add(*[*route.builder.build(ctx, self.router)])
+        ctx.add(RouterSearchbar(ctx=ctx, router=self.router, bar_hint_text=self.router.url))
+        ctx.add(*[*RouteBuilder.build(route, RouteProps(ctx, self.router))])
     
     def run(self):
         ft.app(self._render)

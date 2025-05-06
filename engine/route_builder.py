@@ -18,59 +18,81 @@ def default_page(props: RouteProps) -> list[ft.Control]:
     return [] 
 
 class RouteBuilder:
-    def __init__(self,  route: "IRoute") -> None:
-        self.route: "IRoute"  = route
-    
-    def _retrieve_page(self, route: "IRoute"):
+    @staticmethod
+    def _retrieve_page(route: "IRoute"):
         if route.dynamic_route is not None and route.dynamic_route.page is not None:
             return route.dynamic_route.page.main
         elif route.page is not None:
             return route.page.main
         return default_page
-        
-    def _retrieve_layout(self, route: "IRoute"):
+    
+    @staticmethod   
+    def _retrieve_layout(route: "IRoute"):
         if route.layout is not None:
             return route.layout.main
         return default_layout
+
+    @staticmethod
+    def _assemble_layout_stack(route: "IRoute", props: RouteProps) -> list[ft.Control]:
+        """
+        Aplica layouts em ordem correta: mais externo envolve mais interno.
+        Começa do route atual e caminha até a raiz, montando a hierarquia.
+        """
+        layouts = []
+        current = route
+
+        # Subir até o topo e empilhar os layouts
+        while current:
+            layouts.append(RouteBuilder._retrieve_layout(current))
+            current = current.parent
+
+        # Agora, aplicar os layouts de fora para dentro
+        result = props.children
+        for layout_fn in layouts:
+            result = layout_fn(RouteProps(props.ctx, props.router, children=result, props=props.props))
+
+        return result
+    
+    @staticmethod
+    def build(route: "IRoute", props: RouteProps) -> list[ft.Control]:
+        ctx = props.ctx
+        router = props.router
         
-    def _retrieve_parent_layout(self, route: "IRoute"):
-        if route.parent is not None and route.parent.layout is not None:
-            return route.parent.layout.main
-        return default_layout
-    
-    def _retrieve_structure(self, route: "IRoute"):
-        parent_layout = self._retrieve_parent_layout(route)
-        layout_fn = self._retrieve_layout(route)
-        page_fn = self._retrieve_page(route)
-        return parent_layout, layout_fn, page_fn
-    
-    
-    def build(self, ctx: ft.Page, router: "IRouter", props: dict = {}) -> list[ft.Control]:
         # Escolhe funções de acordo com disponibilidade
-        parent_layout, layout_fn, page_fn = self._retrieve_structure(self.route)
-        print("[debug] RouteBuilder.build()")
-        print("exist", parent_layout, layout_fn, page_fn )
+        page_fn = RouteBuilder._retrieve_page(route)
+        
         try:
-            controls = page_fn(RouteProps(ctx, router, [], props=props))
-            print("[debug] RouteBuilder.build() - page_fn:", controls)
+            controls = [*page_fn(props)]
                 
             if controls is None:
-                controls = self.route.not_found.main(RouteProps(ctx, router, props={"error": "Page not found"}))
-            
-            print("[debug] RouteBuilder.build() - controls:", controls)
-            
-            result = parent_layout(RouteProps(ctx, router, [*layout_fn(RouteProps(ctx, router, [*controls]))]))
-            
-            print("[debug] RouteBuilder.build() - result:", result)
+                controls = route.not_found.main(RouteProps(ctx, router, props={"error": "Page not found"}))
+            result = RouteBuilder._assemble_layout_stack(route, RouteProps(ctx, router, controls))
             
             if not result: 
-                result = parent_layout(RouteProps(ctx, router, *layout_fn(RouteProps(ctx, router, [*controls]))))
-            
-            print("[debug] RouteBuilder.build() - result:", result)
+                result = route.not_found.main(RouteProps(ctx, router, props={"error": "Page not found"}))
             
             return [*result]
         except Exception as e:
-            return [*parent_layout(RouteProps(ctx, router, [*layout_fn(RouteProps(ctx, router, [*self.route.not_found.main(RouteProps(ctx,router, props={"error build": str(e)}))]))] ))]
+            # return [*parent_layout(RouteProps(ctx, router, [*layout_fn(RouteProps(ctx, router, [*route.not_found.main(RouteProps(ctx,router, props={"error build": str(e)}))]))] ))]
+            return [*RouteBuilder.error(route, RouteProps(ctx, router, props={"error": str(e)}))]
                 
-     
-        
+    
+    @staticmethod
+    def error(route: "IRoute", props: RouteProps) -> list[ft.Control]:
+        """
+        Retorna uma página de erro personalizada.
+        """
+        return [
+            *RouteBuilder._assemble_layout_stack(
+                route,
+                RouteProps(
+                    ctx=props.ctx,
+                    router=props.router,
+                    children=[*(
+                        route.not_found.main(props) 
+                        if route.not_found
+                        else [ ft.Text(f"Erro: Página não encontrada ou rota mal configurada. Detalhes: {props.props.get('error', 'Sem detalhes')}") ]
+                    )]
+                )
+            )
+        ]

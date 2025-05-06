@@ -11,35 +11,35 @@ import re
 import flet as ft
 
 class IRoute(ABC):
-    """
-    Interface abstrata para páginas hierárquicas.
-    Cada página deve implementar run(), que recebe um objeto ft.Page
-    e retorna um ft.Page configurado.
-    """
-    def __init__(self, dir: Path, parent: "IRoute" = None):
-        # define o diretório pai (opcional)
-        self.parent: "IRoute" = parent
-        # define diretório da página
-        self.dir: Path = dir
-        # define o nome do diretório
-        self.name: str = "/" + ("" if not self.parent else dir.parent.name + "/" + dir.name).replace("app/", "")
-        
-        self.dynamic_route: "IRoute" = None
-        self.curent_path_node = self.name.split("/")[-1]
-        
-        # verifica se possui algum item entre parentes []
-        self.isDynamic: bool = bool(re.search(r"\[(.*?)\]", self.name))
+  """
+  Interface abstrata para páginas hierárquicas.
+  Cada página deve implementar run(), que recebe um objeto ft.Page
+  e retorna um ft.Page configurado.
+  """
+  def __init__(self, dir: Path, parent: "IRoute" = None):
+    # define o diretório pai (opcional)
+    self.parent: "IRoute" | None = parent
+    # define diretório da página
+    self.dir: Path = dir
+    # define o nome do diretório
+    self.name: str = "/" + ("" if not self.parent else dir.parent.name + "/" + dir.name).replace("app/", "")
+    
+    self.dynamic_route: "IRoute" = None
+    self.curent_path_node = self.name.split("/")[-1]
+    
+    # verifica se possui algum item entre parentes []
+    self.isDynamic: bool = bool(re.search(r"\[(.*?)\]", self.name))
 
-        # placeholder para atributo page carregado de page.py
-        self.page: Module = None
-        # placeholder para layout carregado de layout.py
-        self.layout: Module = None
-        # placeholder para página de erro carregada de not_found.py
-        self.not_found: Module = None
-        
-        
-        
+    page_py = dir / "page.py"            # script principal da página
+    layout_py = dir / "layout.py"        # define layout custom
+    not_found_py = dir / "not_found.py"  # define página de erro
+    self.router: IRouter
 
+    # Carrega módulos se os arquivos existirem
+    self.page = Module(path=page_py, main="page", funcs=["generate_static_params"]) if page_py.exists() else None 
+    self.layout = Module(path=layout_py, main="layout", funcs=[]) if layout_py.exists() else None 
+    self.not_found = Module(path=not_found_py, main="not_found", funcs=[]) if not_found_py.exists() else None
+        
 class IRouter: 
   def __init__(self, root: IRoute) -> None:
     self.root: IRoute = root
@@ -55,7 +55,7 @@ class IRouter:
     pass
   
   @abstractmethod
-  def navigate(self, _path: str, ctx: ft.Page) -> None:
+  def navigate(self, ctx: ft.Page, _path: str) -> None:
     """
     Navega para a página correspondente ao caminho fornecido.
     Se o caminho não existir, tenta corresponder a uma rota dinâmica.
@@ -80,7 +80,7 @@ class IRouter:
     pass
   
   @abstractmethod
-  def _load_routes(self, page: IRoute, parent_path: str = "/") -> None:
+  def _build_route_structure(self, page: IRoute, parent_path: str = "/") -> None:
     """
     Carrega todos os diretórios de páginas e módulos disponíveis.
     """
