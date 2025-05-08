@@ -1,5 +1,5 @@
 import flet as ft 
-from engine.interface import IRoute, IRouter
+from engine.interface import IRoute
 from engine.route_props import RouteProps
 
 def default_layout(props: RouteProps) -> list[ft.Control]:
@@ -17,12 +17,16 @@ def default_page(props: RouteProps) -> list[ft.Control]:
     """
     return [] 
 
+
+def default_error(props: RouteProps) -> list[ft.Control]:
+    return [
+        ft.Text(f"Erro: Página não encontrada ou rota mal configurada. Detalhes: {props.props.get('error', 'Sem detalhes')}")
+    ]
+
 class RouteBuilder:
     @staticmethod
     def _retrieve_page(route: "IRoute"):
-        if route.dynamic_route is not None and route.dynamic_route.page is not None:
-            return route.dynamic_route.page.main
-        elif route.page is not None:
+        if route.page is not None:
             return route.page.main
         return default_page
     
@@ -52,29 +56,35 @@ class RouteBuilder:
             result = layout_fn(RouteProps(props.ctx, props.router, children=result, props=props.props))
 
         return result
-    
+
     @staticmethod
     def build(route: "IRoute", props: RouteProps) -> list[ft.Control]:
         ctx = props.ctx
         router = props.router
+        print(f"[build] page {route.dir}")
         
         # Escolhe funções de acordo com disponibilidade
         page_fn = RouteBuilder._retrieve_page(route)
         
+        
+        print(f"[build] page exist? {page_fn}")
+        
         try:
             controls = [*page_fn(props)]
+            print(f"[build] contorls: {controls}")
                 
             if controls is None:
                 controls = route.not_found.main(RouteProps(ctx, router, props={"error": "Page not found"}))
             result = RouteBuilder._assemble_layout_stack(route, RouteProps(ctx, router, controls))
             
+            print(f"[build] result: {result}")
             if not result: 
                 result = route.not_found.main(RouteProps(ctx, router, props={"error": "Page not found"}))
             
             return [*result]
         except Exception as e:
             # return [*parent_layout(RouteProps(ctx, router, [*layout_fn(RouteProps(ctx, router, [*route.not_found.main(RouteProps(ctx,router, props={"error build": str(e)}))]))] ))]
-            return [*RouteBuilder.error(route, RouteProps(ctx, router, props={"error": str(e)}))]
+            return [*RouteBuilder.error(route, RouteProps(ctx, router, props={"error": "erro no build: " + str(e)}))]
                 
     
     @staticmethod
@@ -91,7 +101,7 @@ class RouteBuilder:
                     children=[*(
                         route.not_found.main(props) 
                         if route.not_found
-                        else [ ft.Text(f"Erro: Página não encontrada ou rota mal configurada. Detalhes: {props.props.get('error', 'Sem detalhes')}") ]
+                        else default_error(props)
                     )]
                 )
             )
