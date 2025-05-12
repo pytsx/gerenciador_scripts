@@ -1,4 +1,4 @@
-from engine.modules import Modules
+from engine import Modules
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent

@@ -1,3 +1,4 @@
+
 """
 Arquivo carteiras.py:
 Define o ponto de entrada 'execute' para o módulo carteiras,
@@ -10,3 +11,6 @@ def execute():  # Função main do módulo carteiras
     print("Hello from the main function in carteiras.py!")
     # Add your code logic here: substitua este comentário pelo código que implementa
     # as funcionalidades de gerenciamento de carteiras (e.g., cálculos, acesso a dados, etc.)
+    
+    
+    return 

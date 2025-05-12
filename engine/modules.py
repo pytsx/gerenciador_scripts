@@ -23,7 +23,7 @@ class Module:
         # Junta nome da função principal com auxiliares
         self.funcs_names = [main, *funcs]
         # Função principal dummy até ser substituída
-        self.main = lambda: None
+        self.main = None
         # Dicionário para mapear funções auxiliares existentes
         res: dict[str, Callable] = {}
 
@@ -44,7 +44,7 @@ class Module:
                         res[func_name] = func
             else:
                 # se não existir, cria stub inofensivo
-                res[func_name] = lambda: None
+                res[func_name] = None
         # expõe dicionário de funções auxiliares
         self.funcs = res
 
@@ -96,6 +96,12 @@ class Modules:
             file.stem: Module(file, self.main, self.funcs)
             for file in self.dir.iterdir()
             if file.is_file() and file.suffix == ".py"
+        }
+        
+        self.modules = {
+            name: module 
+            for name, module in self.modules.items()
+            if module.main is not None
         }
 
     def keys(self) -> list[str]:

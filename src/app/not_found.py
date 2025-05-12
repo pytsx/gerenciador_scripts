@@ -1,5 +1,5 @@
 import flet as ft
-from engine.route_props import RouteProps
+from engine import RouteProps
 
 def not_found(props: RouteProps):
   return [

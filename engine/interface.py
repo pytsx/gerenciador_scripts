@@ -7,7 +7,6 @@ from pathlib import Path
 # importa ABC e abstractmethod para definição de interfaces
 from abc import ABC, abstractmethod
 from engine.modules import Module
-import re
 import flet as ft
 
 class IRoute(ABC):
@@ -21,41 +20,84 @@ class IRoute(ABC):
     name: str, 
     dir: Path, 
     parent: "IRoute" = None,
-    curent_path_node: str = None,
+    
     page: Module = None,
     layout: Module = None,
     not_found: Module = None,
   ):
     # define diretório da página
     self.dir: Path =dir
-    # define o diretório pai (opcional)
     self.parent: "IRoute" | None =parent
     # define o nome do diretório
     self.name:str =name
-    
-    self.curent_path_node:str =curent_path_node
-    
+    # define os parâmetros dinâmicos da página
     self.static_params: list[tuple[str, dict]] = []
-
-    self.router: IRouter
-    # Carrega módulos se os arquivos existirem
+    
+    # Carrega módulos
     self.page:Module  = page
     self.layout:Module = layout
     self.not_found:Module = not_found
-        
-class IRouter: 
-  def __init__(self, root: IRoute) -> None:
+  
+  @abstractmethod
+  def generate_static_params(self) -> list[tuple[str, dict]]:...
+  
+"""
+  [IRouteGenerator]
+"""  
+class IRouteGenerator(ABC):
+  def __init__(self, root: IRoute):
     self.root: IRoute = root
-    self.routes: dict[str, IRoute] = { "/": self.root }
+    self.routes: dict[str, IRoute] = {}
+  
+  @abstractmethod
+  def initialize_route_structure(self, path: Path):
+    ...
+    
+  @abstractmethod      
+  def establish_route_hierarchy(self):
+    ...
+    
+    
+  @abstractmethod
+  def normalize_name(self, path: Path) -> str:
+    ...
+  
+class IRenderer(ABC): 
+  def __init__(self) -> None:
+    ...
+    
+  @abstractmethod
+  def _render(self, ctx: ft.Page, router: "IRouter") -> ft.Page:
+    ...
+      
+  @abstractmethod
+  def run(self):
+    ...
+  
+  @abstractmethod
+  def clear(self, ctx: ft.Page) -> None:
+    ...
+
+  @abstractmethod  
+  def mount_default_layout(self, ctx: ft.Page, router: "IRouter") -> None:
+    ...
+  
+  @abstractmethod
+  def render_route(self, ctx: ft.Page, router: "IRouter", route: "IRoute") -> None:
+    ...
+
+  
+"""
+  [IRouter]
+"""  
+      
+class IRouter: 
+  def __init__(self, route_generator: IRouteGenerator, renderer: IRenderer) -> None:
+    self.route_generator: IRouteGenerator = route_generator
+    self.renderer: IRenderer = renderer
+    self.routes: dict[str, IRoute] = { }
     self.url: str = "/"
 
-  @abstractmethod
-  def searchbar(self, page: ft.Page) -> ft.Page:
-    """
-    Adiciona uma barra de pesquisa à página.
-    """
-    pass
-  
   @abstractmethod
   def navigate(self, ctx: ft.Page, _path: str) -> None:
     """
@@ -63,7 +105,14 @@ class IRouter:
     Se o caminho não existir, tenta corresponder a uma rota dinâmica.
     Se ainda não existir, navega para a página de erro (not_found).
     """
-    pass
+    ...
+  
+  @abstractmethod
+  def error(self, route: "IRoute", ctx: ft.Page, error_message: str) -> list[ft.Control]:
+    """
+    Retorna uma página de erro personalizada.
+    """
+    ...
   
   @abstractmethod
   def get_route(self, path: str) -> IRoute:
@@ -72,26 +121,19 @@ class IRouter:
     Se o caminho não existir, tenta corresponder a uma rota dinâmica.
     Se ainda não existir, retorna None.
     """
-    pass
+    ...
   
   @abstractmethod
   def check_path(self, path: Path) -> bool:
     """
     Verifica se o caminho existe nas rotas.
     """
-    pass
-  
-  @abstractmethod
-  def _construct_route_hierarchy(self, page: IRoute, parent_path: str = "/") -> None:
-    """
-    Carrega todos os diretórios de páginas e módulos disponíveis.
-    """
-    pass
+    ...
   
   @abstractmethod
   def __getitem__(self, path: str) -> IRoute:
     """
     Permite acessar as páginas diretamente pelo caminho.
     """
-    pass
+    ...
   
