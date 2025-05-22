@@ -1,6 +1,6 @@
 import flet as ft
 from env import scripts
-from engine import RouteProps, Table
+from engine import BaseRouteProps, Table
 
 def executar_modulo(key, page: ft.Page = None):
   print(f"Executando módulo: {key}")
@@ -19,7 +19,7 @@ def abrir_acoes_rapidas( key: str):
   # Aqui você pode abrir um popup/menu
 
     
-def scripts_table(props: RouteProps):
+def scripts_table(props: BaseRouteProps):
   return Table(
     key="tabela_scripts",
     ctx=props.ctx,
@@ -31,18 +31,17 @@ def scripts_table(props: RouteProps):
           ft.DataCell(
             content=ft.Row(
               controls=[
-                ft.IconButton(ft.icons.ARROW_OUTWARD_SHARP, tooltip="ir para", on_click=lambda e, m=module, p=props: p.router.navigate(p.ctx, "/" + m)),
+                ft.IconButton(ft.icons.ARROW_OUTWARD_SHARP, tooltip="ir para", on_click=lambda e, m=module, p=props: p.router.navigate("/" + m)),
                 ft.PopupMenuButton(
                   icon=ft.icons.MORE_VERT,
                   tooltip="Ações rápidas",
                   items=[
                     ft.PopupMenuItem(text="Executar", on_click=lambda e, m=module: executar_modulo(m)),
-                    ft.PopupMenuItem(text="ir para", on_click=lambda e, m=module, p=props: p.router.navigate(p.ctx, "/" + m)),
+                    ft.PopupMenuItem(text="ir para", on_click=lambda e, m=module, p=props: p.router.navigate("/" + m)),
                   ]
                 )
               ],
               alignment=ft.MainAxisAlignment.END,
-                
             ),
           ),
         ]

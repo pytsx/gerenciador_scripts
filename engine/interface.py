@@ -63,7 +63,9 @@ class IRouteGenerator(ABC):
     ...
   
 class IRenderer(ABC): 
+  
   def __init__(self) -> None:
+    self.ctx: ft.Page
     ...
     
   @abstractmethod
@@ -75,17 +77,24 @@ class IRenderer(ABC):
     ...
   
   @abstractmethod
-  def clear(self, ctx: ft.Page) -> None:
+  def clear(self) -> None:
     ...
 
   @abstractmethod  
-  def mount_default_layout(self, ctx: ft.Page, router: "IRouter") -> None:
+  def mount_default_layout(self, router: "IRouter") -> None:
     ...
   
   @abstractmethod
-  def render_route(self, ctx: ft.Page, router: "IRouter", route: "IRoute") -> None:
+  def render_route(self, router: "IRouter", route: "IRoute") -> None:
     ...
-
+    
+  @abstractmethod
+  def ensure_ctx(self) -> bool:
+    """
+    Verifica se o contexto (ctx) está inicializado.
+    Se não estiver, lança uma exceção.
+    """
+    ...
   
 """
   [IRouter]
@@ -97,6 +106,7 @@ class IRouter:
     self.renderer: IRenderer = renderer
     self.routes: dict[str, IRoute] = { }
     self.url: str = "/"
+
 
   @abstractmethod
   def navigate(self, ctx: ft.Page, _path: str) -> None:
@@ -136,4 +146,9 @@ class IRouter:
     Permite acessar as páginas diretamente pelo caminho.
     """
     ...
-  
+
+
+
+class GenerateStaticParams(list):
+  """Define parâmetros estáticos para uma rota."""
+  pass

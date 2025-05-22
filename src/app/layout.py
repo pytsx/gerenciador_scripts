@@ -1,7 +1,7 @@
 import flet as ft
-from engine import RouteProps
+from engine import BaseRouteProps
 
-def layout(props: RouteProps) -> ft.Page:
+def layout(props: BaseRouteProps) -> ft.Page:
   props.ctx.title = "Gerenciador de Projetos"
   props.ctx.vertical_alignment = ft.MainAxisAlignment.CENTER
   

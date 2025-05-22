@@ -1,8 +1,8 @@
 import flet as ft
-from engine import RouteProps, Table
+from engine import BaseRouteProps, Table
 import polars as pl
     
-def dataframe_table(props: RouteProps, dataframe: pl.DataFrame):
+def dataframe_table(props: BaseRouteProps, dataframe: pl.DataFrame):
   return Table(
     key="dataframe_table",
     ctx=props.ctx,

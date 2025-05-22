@@ -1,2 +1,4 @@
-from engine.ui.table import Table
-from engine.ui.form_generator import form_generator
+from engine.ui.table import *
+from engine.ui.form_generator import *
+
+__all__ = ["Table", "form_generator"]

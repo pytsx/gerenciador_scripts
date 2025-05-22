@@ -1,4 +1,4 @@
-from engine import RouteProps, Table, join, get_downloads_path
+from engine import BaseRouteProps, Table, join, get_downloads_path
 import flet as ft
 from pathlib import Path
 from src.components.dataframe_table import dataframe_table
@@ -6,12 +6,12 @@ import polars as pl
 
 
 class FilePicker: 
-  def __init__(self, route_props: RouteProps):
+  def __init__(self, route_props: BaseRouteProps):
     self.children: ft.Column = ft.Column()
     self.files: list[Path] = []
     self.dataframe: pl.DataFrame = pl.DataFrame()
     self.message:ft.Text = ft.Text()
-    self.route_props:RouteProps = route_props
+    self.route_props:BaseRouteProps = route_props
 
   def pick_files_result(self, e: ft.FilePickerResultEvent):
     self.files.clear()
@@ -27,5 +27,3 @@ class FilePicker:
     )
     self.message.update()
     self.children.update()
-   
-      

@@ -1,4 +1,4 @@
-from engine.route import Route, RouteProps, RouteBuilder, RouteGenerator
+from engine.route import Route, BaseRouteProps, RouteBuilder, RouteGenerator
 from engine.interface import IRouter, IRenderer
 
 import flet as ft
@@ -17,7 +17,7 @@ class Router(IRouter):
 
   def error(self, route: Route, ctx: ft.Page, error_message: str):
     return [
-      *RouteBuilder.error(route, RouteProps(ctx, self, props={"error": f"{error_message}"}))
+      *RouteBuilder.error(route, BaseRouteProps(ctx, self, props={"error": f"{error_message}"}))
     ]
     
   def remount_default_layout(self, ctx: ft.Page) -> None:
@@ -27,19 +27,19 @@ class Router(IRouter):
     ctx.controls.clear()
     ctx.add(first)
 
-  def navigate(self, ctx: ft.Page, _path: str) -> None:
+  def navigate(self, _path: str) -> None:
     self.url = _path
     # self.remount_default_layout(ctx)
     
-    self.renderer.clear(ctx)
-    self.renderer.mount_default_layout(ctx, self)
+    self.renderer.clear()
+    self.renderer.mount_default_layout(self)
     
     if _path in self.routes:
       route = self.routes[self.url]
-      ctx.add(*RouteBuilder.build(
+      self.renderer.ctx.add(*RouteBuilder.build(
         route, 
-        RouteProps(
-            ctx=ctx, 
+        BaseRouteProps(
+            ctx=self.renderer.ctx, 
             router=self, 
             props=self.match_dynamic_segments(route.name, self.url)
           )
@@ -47,7 +47,7 @@ class Router(IRouter):
       )
     else:
       # Handle 404 or not found page
-      self.error(self.route_generator.root, ctx, "Página não encontrada")
+      self.error(self.route_generator.root, self.renderer.ctx, "Página não encontrada")
 
   
   def match_dynamic_segments(self, path_template: str, resolved_path: str) -> dict:

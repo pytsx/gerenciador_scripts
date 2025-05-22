@@ -98,3 +98,4 @@ def form_generator(payload: FormPayload) -> ft.Column:
       ft.Text(payload.title, size=20, weight="bold"),
       *controls
   ])
+

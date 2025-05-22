@@ -27,3 +27,6 @@ def join(source_df: pl.DataFrame, target_df: pl.DataFrame, keys: list[str], how:
   except Exception as e:
     print(f"Erro ao realizar o join: {e}")
     return source_df  # Retorna um DataFrame vazio em caso de erro
+  
+
+__all__ = ["join"]

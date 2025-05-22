@@ -2,6 +2,7 @@
 from pathlib import Path                
 from engine.modules import Module     
 from engine.interface import IRoute
+from engine.route.route_props import BaseRouteProps
 
 class RouteLevel:
     def __init__(self, level: int = 0) -> None:
@@ -40,10 +41,10 @@ class Route(IRoute):
         self.generate_static_params()
 
 
-    def generate_static_params(self) -> list[tuple[str, dict]]:
+    def generate_static_params(self) -> list[BaseRouteProps]:
         """
         Gera parâmetros estáticos a partir da hierarquia de páginas.
-        - Retorna um dicionário com os parâmetros estáticos.
+        - Retorna uma lista de objetos BaseRouteProps.
         """
         if self.page and "generate_static_params" in self.page.funcs:
             func = self.page.funcs["generate_static_params"]

@@ -48,3 +48,6 @@ class Component:
         self.wrapper.controls.extend(self.origin)
         # notifica Flet para renderizar a lista restaurada
         ctx.update()
+
+
+__all__ = ["Component"]

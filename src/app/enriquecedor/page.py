@@ -9,7 +9,7 @@ FLUXO:
   - download do arquivo enriquecido
 """
 
-from engine import RouteProps, join, get_downloads_path, open_downloads, Table
+from engine import BaseRouteProps, join, get_downloads_path, open_downloads, Table
 import flet as ft
 from pathlib import Path
 import polars as pl 
@@ -38,9 +38,9 @@ class EnrichFile:
   Represents the enrichment page where users can upload files, select templates,
   preview enriched data, and export the results.
   """
-  def __init__(self, route_props: RouteProps):
+  def __init__(self, route_props: BaseRouteProps):
     # Initialize route properties and UI components
-    self.route_props: RouteProps = route_props
+    self.route_props: BaseRouteProps = route_props
     self.route_props.ctx.scroll = True
     # File picker for selecting files
     self.file_picker = FilePicker(self.route_props)
@@ -116,8 +116,6 @@ class EnrichFile:
     # Join the dataframes
     self.joined_df = join(self.file_picker.dataframe, contact_base, keys=["CNPJ"], how="inner")
 
-
-
   def load_contact_base(self, max_cnpj: int):
     """
     Load the contact base data and update the UI accordingly.
@@ -187,7 +185,7 @@ class EnrichFile:
     )
 
 # Page entry point
-def page(props: RouteProps):
+def page(props: BaseRouteProps):
   """
   Return the content for the enrichment page.
   """

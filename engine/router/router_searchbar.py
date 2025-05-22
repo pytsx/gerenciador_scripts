@@ -22,7 +22,7 @@ class RouterSearchbar(ft.SearchBar):
     
     def go_to(e: ft.ControlEvent, data: str):
       if self.page:  # Verifica se o controle foi adicionado à página
-        router.navigate(ctx, data)
+        router.navigate(data)
         self._safe_close_view()
     
     def on_click(e: ft.ControlEvent, data):

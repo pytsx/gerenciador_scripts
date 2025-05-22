@@ -1,8 +1,8 @@
 import flet as ft 
 from engine.interface import IRoute
-from engine.route import RouteProps
+from engine.route import BaseRouteProps
 
-def default_layout(props: RouteProps) -> list[ft.Control]:
+def default_layout(props: BaseRouteProps) -> list[ft.Control]:
     """
     Layout padrão (sem AppBar):
     - Recebe page do Flet e controles a serem renderizados.
@@ -10,7 +10,7 @@ def default_layout(props: RouteProps) -> list[ft.Control]:
     """
     return [*props.children]          # devolve objeto page para Flet processar
 
-def default_page(props: RouteProps) -> list[ft.Control]:
+def default_page(props: BaseRouteProps) -> list[ft.Control]:
     """
     Page padrão vazia (fallback quando não há page.py):
     - Recebe contexto Flet (ctx) e retorna tupla vazia de controles.
@@ -18,7 +18,7 @@ def default_page(props: RouteProps) -> list[ft.Control]:
     return [] 
 
 
-def default_error(props: RouteProps) -> list[ft.Control]:
+def default_error(props: BaseRouteProps) -> list[ft.Control]:
     return [
         ft.Text(f"Erro: Página não encontrada ou rota mal configurada. Detalhes: {props.props.get('error', 'Sem detalhes')}")
     ]
@@ -37,7 +37,7 @@ class RouteBuilder:
         return default_layout
 
     @staticmethod
-    def _assemble_layout_stack(route: "IRoute", props: RouteProps) -> list[ft.Control]:
+    def _assemble_layout_stack(route: "IRoute", props: BaseRouteProps) -> list[ft.Control]:
         """
         Aplica layouts em ordem correta: mais externo envolve mais interno.
         Começa do route atual e caminha até a raiz, montando a hierarquia.
@@ -54,12 +54,12 @@ class RouteBuilder:
         result = props.children
         # Agora, aplicar os layouts de fora para dentro
         for layout_fn in layouts:
-            result = layout_fn(RouteProps(props.ctx, props.router, children=result, props=props.props))
+            result = layout_fn(BaseRouteProps(props.ctx, props.router, children=result, props=props.props))
 
         return result
 
     @staticmethod
-    def build(route: "IRoute", props: RouteProps) -> list[ft.Control]:
+    def build(route: "IRoute", props: BaseRouteProps) -> list[ft.Control]:
         ctx = props.ctx
         router = props.router
         page_fn = RouteBuilder._retrieve_page(route)
@@ -82,25 +82,25 @@ class RouteBuilder:
             ctx.add(first)
             
             if controls is None:
-                controls = route.not_found.main(RouteProps(ctx, router, props={"error": "Page not found"}))
-            result = RouteBuilder._assemble_layout_stack(route, RouteProps(ctx, router, controls))
+                controls = route.not_found.main(BaseRouteProps(ctx, router, props={"error": "Page not found"}))
+            result = RouteBuilder._assemble_layout_stack(route, BaseRouteProps(ctx, router, controls))
             if not result: 
-                result = route.not_found.main(RouteProps(ctx, router, props={"error": "Page not found"}))
+                result = route.not_found.main(BaseRouteProps(ctx, router, props={"error": "Page not found"}))
             
             return [*result]
         except Exception as e:
-            # return [*parent_layout(RouteProps(ctx, router, [*layout_fn(RouteProps(ctx, router, [*route.not_found.main(RouteProps(ctx,router, props={"error build": str(e)}))]))] ))]
-            return [*RouteBuilder.error(route, RouteProps(ctx, router, props={"error": "erro no build: " + str(e)}))]
+            # return [*parent_layout(BaseRouteProps(ctx, router, [*layout_fn(BaseRouteProps(ctx, router, [*route.not_found.main(BaseRouteProps(ctx,router, props={"error build": str(e)}))]))] ))]
+            return [*RouteBuilder.error(route, BaseRouteProps(ctx, router, props={"error": "erro no build: " + str(e)}))]
     
     @staticmethod
-    def error(route: "IRoute", props: RouteProps) -> list[ft.Control]:
+    def error(route: "IRoute", props: BaseRouteProps) -> list[ft.Control]:
         """
         Retorna uma página de erro personalizada.
         """
         return [
             *RouteBuilder._assemble_layout_stack(
                 route,
-                RouteProps(
+                BaseRouteProps(
                     ctx=props.ctx,
                     router=props.router,
                     children=[*(

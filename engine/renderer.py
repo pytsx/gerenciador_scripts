@@ -9,7 +9,7 @@ import flet as ft
 from engine.interface import IRenderer
 from engine.router import Router
 from engine.route import Route
-from engine.route import RouteProps, RouteBuilder
+from engine.route import BaseRouteProps, RouteBuilder
 from engine.router import RouterSearchbar
 
 def match_dynamic_segments(path_template: str, resolved_path: str) -> dict:
@@ -22,36 +22,48 @@ def match_dynamic_segments(path_template: str, resolved_path: str) -> dict:
     }
     
 class Renderer(IRenderer): 
-    def __init__(self) -> None:
+    def __init__(self, searchbar: RouterSearchbar) -> None:
         super().__init__()
-        self.searchbar: RouterSearchbar = RouterSearchbar()
-    
-    def clear(self, ctx: ft.Page) -> None:
-        ctx.controls.clear()
-    
-    def mount_default_layout(self, ctx: ft.Page, router: Router) -> None:
-        searchbar: RouterSearchbar = self.searchbar.mount(ctx, router, bar_hint_text=router.url)
-        ctx.add(searchbar)  # Adiciona o RouterSearchbar antes de qualquer operação
-        searchbar.update()  # Garante que o controle seja atualizado corretamente
+        self._searchbar = searchbar
+        self.ctx: ft.Page = None
         
-    def render_route(self, ctx: ft.Page, router: Router, route: Route) -> None:
-        ctx.add(*RouteBuilder.build(
-                route, 
-                RouteProps(
-                    ctx=ctx, 
-                    router=self, 
-                    props=match_dynamic_segments(route.name, router.url)
+    
+    def ensure_ctx(self) -> bool:
+        if self.ctx is None:
+            raise Exception("Context not initialized. Please run the app first.")
+        return True
+    
+    def clear(self) -> None:
+        if self.ensure_ctx():
+            self.ctx.controls.clear()
+    
+    def mount_default_layout(self, router: Router) -> None:
+        if self.ensure_ctx():
+            searchbar = self._searchbar.mount(self.ctx, router, bar_hint_text=router.url)
+            self.ctx.add(searchbar)  # Adiciona o RouterSearchbar antes de qualquer operação
+            searchbar.update()  # Garante que o controle seja atualizado corretamente
+        
+    def render_route(self, router: Router, route: Route) -> None:
+        if self.ensure_ctx():
+            self.ctx.add(*RouteBuilder.build(
+                    route, 
+                    BaseRouteProps(
+                        ctx=self.ctx, 
+                        router=router, 
+                        props=match_dynamic_segments(route.name, router.url)
+                    )
                 )
             )
-        )
     
     def _render(self, ctx: ft.Page, router: Router) -> ft.Page:
-        self.clear(ctx)
-        self.mount_default_layout(ctx, router)
+        self.ctx = ctx
+        
+        self.clear()
+        self.mount_default_layout(router)
         
         route = router.get_route(router.url)
-        self.render_route(ctx, router, route)
+        self.render_route(router, route)
         
     def run(self, router: Router):
-        ft.app(lambda ctx, rt=router:self._render(ctx, rt))
+        ft.app(lambda ctx, rt=router:self._render(ctx, rt), host="localhost", port=8080)
 
